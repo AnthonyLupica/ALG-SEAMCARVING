@@ -109,6 +109,12 @@ vector<vector<int>> initImageMap(const string &filename)
         // grab a row of data
         getline(pgmInputFile, temp_line); 
 
+        // if temp_line does not end in a whitespace we will append one ourself 
+        if (temp_line[temp_line.size() - 1] != ' ')
+        {
+            temp_line.append(" ");
+        }
+
         // append to the result string
         pixelData += temp_line;
     }
@@ -142,11 +148,11 @@ void displayMatrix(const vector<vector<int>> matrix)
         {
             if (pixel < 100 && pixel >= 10)
             {
-                cout << "  " << pixel << " ";
+                cout << " 0" << pixel << " ";
             }
             else if (pixel < 10)
             {
-                cout <<  "   " << pixel << " ";
+                cout <<  " 00" << pixel << " ";
             }
             else 
             {
