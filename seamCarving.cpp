@@ -7,6 +7,7 @@
 #include <vector>
 #include <string> 
 #include <sstream>
+#include <cmath> 
 
 using std::cout;
 using std::cerr;
@@ -18,6 +19,7 @@ using std::string;
 using std::stringstream;
 
 vector<vector<int>> initImageMap(const string &filename);
+vector<vector<int>> initEnergyMap(const vector<vector<int>> imageMap);
 void displayMatrix(const vector<vector<int>> matrix);
 
 int main(int argc, char* argv[]) 
@@ -37,8 +39,15 @@ int main(int argc, char* argv[])
     // INITIALIZE THE IMAGE MAP 
     vector<vector<int>> I = initImageMap(argv[1]);
 
+    cout << "Image Matrix for '" << argv[1] << "': \n";
     displayMatrix(I);
 
+    // INITIALIZE THE ENERGY MAP
+    vector<vector<int>> E = initEnergyMap(I);
+    
+    cout << "\nDerived Energy Matrix: \n";
+    displayMatrix(E);
+   
     return 0;
 }
 
@@ -137,6 +146,47 @@ vector<vector<int>> initImageMap(const string &filename)
     }
     // #endregion
 
+    return result;
+}
+
+// <Summary> Initialize an energy map given an image map produced by initImageMap </Summary> 
+// <Param name='imageMap'> A 2D vector containing the pixel data of a pgm file </Param> 
+// <Return> The energy map by value as a vector<vector<int>> </Return> 
+vector<vector<int>> initEnergyMap(const vector<vector<int>> imageMap)
+{
+    vector<vector<int>> result;
+    for (int i = 0; i < imageMap.size(); ++i)
+    {
+        // outer-for iterates over rows
+
+        vector<int> temp;
+        for (int j = 0; j < imageMap[i].size(); ++j) 
+        {
+            // inner-for iterates over individual pixels in each row
+            
+            // #region find ΔI along X axis 
+            // bounds checking X
+            int left = (j - 1) >= 0 ? imageMap[i][j - 1] : imageMap[i][j]; 
+            int right = (j + 1) < imageMap[i].size() ? imageMap[i][j + 1] : imageMap[i][j];
+
+            int changeX = abs(imageMap[i][j] - left) + abs(imageMap[i][j] - right);
+            // #endregion
+
+            // #region find ΔI along Y axis 
+            // bounds checking Y
+            int up = (i - 1) >= 0 ? imageMap[i - 1][j] : imageMap[i][j];
+            int down = (i + 1) < imageMap.size() ? imageMap[i + 1][j] : imageMap[i][j];
+
+            int changeY = abs(imageMap[i][j] - up) + abs(imageMap[i][j] - down);
+            // #endregion
+            
+            // store the energy of the pixel
+            temp.push_back(changeX + changeY);
+        }
+
+        result.push_back(temp);
+    }
+    
     return result;
 }
 
