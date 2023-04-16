@@ -20,7 +20,8 @@ using std::stringstream;
 
 vector<vector<int>> initImageMap(const string &filename);
 vector<vector<int>> initEnergyMap(const vector<vector<int>> imageMap);
-void displayMatrix(const vector<vector<int>> matrix);
+vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> energyMap);
+void displayMap(const vector<vector<int>> map);
 
 int main(int argc, char* argv[]) 
 {
@@ -40,13 +41,16 @@ int main(int argc, char* argv[])
     vector<vector<int>> I = initImageMap(argv[1]);
 
     cout << "Image Matrix for '" << argv[1] << "': \n";
-    displayMatrix(I);
+    displayMap(I);
 
     // INITIALIZE THE ENERGY MAP
     vector<vector<int>> E = initEnergyMap(I);
     
     cout << "\nDerived Energy Matrix: \n";
-    displayMatrix(E);
+    displayMap(E);
+
+    // INITIALIZE THE CUMULATIVE ENERGY MAP 
+    //vector<vector<int>> CE = initCumulativeEnergyMap(E);
    
     return 0;
 }
@@ -190,9 +194,12 @@ vector<vector<int>> initEnergyMap(const vector<vector<int>> imageMap)
     return result;
 }
 
-void displayMatrix(const vector<vector<int>> matrix)
+// <Summary> Display a 2D vector </Summary> 
+// <Param name='map'> A 2D vector to be displayed </Param> 
+// <Return> N/A </Return> 
+void displayMap(const vector<vector<int>> map)
 {
-    for (vector<int> row : matrix)
+    for (vector<int> row : map)
     {
         for (int pixel : row)
         {
