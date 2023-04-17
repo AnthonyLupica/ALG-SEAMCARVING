@@ -99,6 +99,13 @@ int main(int argc, char* argv[])
     // @TODO horizontal seam loop
 
     // WRITE RESULTS TO FILE
+    for (const auto& row : I) {
+        for (const auto& value : row) {
+            std::cout << value << " ";
+        }
+        std::cout << std::endl;
+    }
+
     cout << "\nEND PROCESSING\n";
     // @TODO write back the image map in the same file format it was read in as
 
