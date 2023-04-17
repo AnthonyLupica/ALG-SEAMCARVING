@@ -36,10 +36,16 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
+// CORE 
+
 vector<vector<int>> initImageMap(const string &filename);
 vector<vector<int>> initEnergyMap(const vector<vector<int>> &imageMap);
 vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap);
 void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumulativeEnergyMap);
+
+// HELPERS
+
+void transposeMap(vector<vector<int>> &imageMap);
 void displayMap(const vector<vector<int>> &map);
 void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical_seams, int num_horizontal_seams);
 
@@ -57,7 +63,7 @@ int main(int argc, char* argv[])
              << "format of valid program invocation: ./a [pgm image file] [# vertical seams to remove] [# horizontal seams to remove]\n";
         exit(1);
     }
-     
+
     // INITIALIZE THE IMAGE MAP 
     vector<vector<int>> I = initImageMap(argv[1]);
 
@@ -105,13 +111,11 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-// <Summary> a 2D vector of integers is populated with the image pixel values comprising the pgm image file, 'filename' </Summary> 
-// <Param name='filename'> name of a file with a .pgm extension </Param> 
-// <Return> the resultant image map by value </Return> 
-// <Assumptions> 
-//      initImageMap assumes the pgm file format outlined in the project description is rigorously adhered to. 
-//      noteably, a hard assumption is made that one optional comment is in the file, necessarily on line two (if it exists)
-// </Assumptions>
+/// @brief A 2D vector of integers is populated with the image pixel values comprising the pgm image file, 'filename'.
+/// @param filename Name of a file with a pgm extension.
+/// @return The resultant image map by value.
+/// @note initImageMap assumes the pgm file format outlined in the project description is rigorously adhered to. 
+///       Noteably, a hard assumption is made that one optional comment is in the file, necessarily on line two (if it exists).
 vector<vector<int>> initImageMap(const string &filename)
 {
     ifstream pgmInputFile(filename);
@@ -214,9 +218,9 @@ vector<vector<int>> initImageMap(const string &filename)
     return result;
 }
 
-// <Summary> a 2D vector of integers is populated with pixel energy values given an image map produced by initImageMap </Summary> 
-// <Param name='imageMap'> a 2D vector containing the pixel data of a pgm file </Param> 
-// <Return> the resultant energy map by value </Return> 
+/// @brief A 2D vector of integers is populated with pixel energy values using an image map produced by initImageMap.
+/// @param imageMap A 2D vector containing the pixel data of a pgm file
+/// @return The resultant energy map by value.
 vector<vector<int>> initEnergyMap(const vector<vector<int>> &imageMap)
 {
     vector<vector<int>> result;
@@ -255,16 +259,11 @@ vector<vector<int>> initEnergyMap(const vector<vector<int>> &imageMap)
     return result;
 }
 
-// <Summary>
-//      a 2D vector of integers is populated with cumulative energy values to provide the seam 
-//      carving algorithm with information about the lowest energy seam 
-// </Summary> 
-// <Param name='energyMap'> the energy map which is used to derive the CE map </Param> 
-// <Return> 
-//      the resultant cumulative energy map by value
-//      the lowest energy value in the final row of the CE matrix represents the pixel 
-//      which ends the lowest energy seam
-// </Return> 
+/// @brief A 2D vector of integers is populated with cumulative energy values using an energy matrix.
+/// @param energyMap The energy map which is used to derive the CE map.
+/// @return The resultant cumulative energy map by value.
+/// @note The lowest energy value in the final row of a CE matrix represents the pixel 
+///       which ends the lowest energy seam.
 vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap)
 {
     // initialize result with the contents of the energyMap
@@ -323,13 +322,10 @@ vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap
     return result;
 }
 
-// <Summary>
-//      given the image map and its cumulative energy map, "carve out" the lowest energy seam 
-//      from the image map
-// </Summary> 
-// <Param name='imageMap'> the image map to be modified by the seamCarver </Param> 
-// <Param name='cumulativeEnergyMap'> the CE map to be traced back to determine the lowest energy seam </Param> 
-// <Return> N/A -> the seam-carved image map is modified by reference </Return> 
+/// @brief Given the image map and its cumulative energy map, "carve out" the lowest energy seam 
+///        from the image map.
+/// @param imageMap The image map to be modified by the seamCarver.
+/// @param cumulativeEnergyMap The CE map to be traced-back to determine the lowest energy seam.
 void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumulativeEnergyMap)
 {
     // modify imageMap by identifying the pixel in each row that is an element of the 
@@ -404,9 +400,38 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
     }
 }
 
-// <Summary> display a 2D vector </Summary> 
-// <Param name='map'> a 2D vector to be displayed </Param> 
-// <Return> N/A </Return> 
+/// @brief Transpose a given 2D vector.
+/// @param imageMap 2D vector to transpose.
+void transposeMap(vector<vector<int>> &imageMap)
+{
+    // the transpose map will need as many rows as imageMap has columns
+    vector<vector<int>> transpose (imageMap[0].size(), vector<int>());
+
+    for(int i = 0; i < imageMap.size(); ++i)
+    {
+        for(int j = 0; j < imageMap[i].size(); ++j)
+        {   
+            // for each pixel in this row of imageMap,
+            // push into consecutive rows of the transpose
+
+            // Ex)   
+            // row: [1 2 3] of imageMap becomes 
+            // 
+            // column: [1]
+            //         [2]
+            //         [3]
+ 
+            transpose[j].push_back(imageMap[i][j]);
+        }
+    }
+
+    imageMap = transpose;
+
+    return;
+}
+
+/// @brief Display a 2D vector.
+/// @param map The 2D vector to be displayed. 
 void displayMap(const vector<vector<int>> &map)
 {
     for (const vector<int>& row : map)
@@ -436,6 +461,10 @@ void displayMap(const vector<vector<int>> &map)
     return;
 }
 
+/// @brief Validate command-line args for the number of seams to remove are within the acceptable range.
+/// @param imageMap The image map for which the seam carving requests are to be completed on.
+/// @param num_vertical_seams Number of vertical seams to remove. If outside range [0, imageMap(num_columns) - 1], the request is invalid.
+/// @param num_horizontal_seams Number of horizontal seams to remove. If outside range [0, imageMap(num_rows) - 1], the request is invalid.
 void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical_seams, int num_horizontal_seams)
 {
     // validate vertical seam request
