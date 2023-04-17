@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     cout << "'" << argv[1] << "' --> Initial Image Map:\n";
     displayMap(I);
 
-    // carve the requested number of vertical seams
+    // CARVE THE REQUESTED NUMBER OF VERTICAL SEAMS
     for (int i = 1; i <= num_vertical_seams; ++i)
     {
         cout << "\n[C][A][R][V][I][N][G] [V[E][R][T][I][C][A][L] [S][E][A][M] [" << i << "]\n";
@@ -98,6 +98,8 @@ int main(int argc, char* argv[])
 
     // @TODO horizontal seam loop
 
+    // WRITE RESULTS TO FILE
+    cout << "\nEND PROCESSING\n";
     // @TODO write back the image map in the same file format it was read in as
 
     return 0;
