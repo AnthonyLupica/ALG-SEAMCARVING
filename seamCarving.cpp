@@ -176,9 +176,9 @@ vector<vector<int>> initImageMap(const string &filename)
             ssPixelData >> pixel;
 
             // ensure the pixel is within the valid range of values
-            if (pixel > maxPixelValue)
+            if (pixel > maxPixelValue || pixel < 0)
             {
-                cerr << "error: a pixel exists in the data which exceeds the given maximum pixel value of " << maxPixelValue << "\n";
+                cerr << "error: a pixel value exists in the image data which falls outside the given acceptable range of [0, " << maxPixelValue << "]\n";
                 exit(1);
             }
             
