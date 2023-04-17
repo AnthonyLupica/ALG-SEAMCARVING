@@ -59,25 +59,25 @@ int main(int argc, char* argv[])
     // INITIALIZE THE IMAGE MAP 
     vector<vector<int>> I = initImageMap(argv[1]);
 
-    cout << "Image Matrix for '" << argv[1] << "': \n";
+    cout << "Image Map For '" << argv[1] << "': \n";
     displayMap(I);
 
     // INITIALIZE THE ENERGY MAP
     vector<vector<int>> E = initEnergyMap(I);
     
-    cout << "\nEnergy Matrix: \n";
+    cout << "\nEnergy Map: \n";
     displayMap(E);
 
     // INITIALIZE THE CUMULATIVE ENERGY MAP 
     vector<vector<int>> CE = initCumulativeEnergyMap(E);
 
-    cout << "\nCumulative Energy Matrix: \n";
+    cout << "\nCumulative Energy Map: \n";
     displayMap(CE);
 
     // CARVE OUT A SEAM
     seamCarver(I, CE); 
 
-    cout << "\nSEAM CARVED IMAGE: \n";
+    cout << "\nSeam-Carved Image: \n";
     displayMap(I);
    
     return 0;
@@ -139,6 +139,7 @@ vector<vector<int>> initImageMap(const string &filename)
     }
 
     getline(pgmInputFile, temp_line); // maximum greyscale value
+    int maxPixelValue = stoi(temp_line);
     // #ENDREGION
 
     // #REGION parse_data
@@ -173,6 +174,13 @@ vector<vector<int>> initImageMap(const string &filename)
         {
             // inner-for iterates over individual pixels in each row
             ssPixelData >> pixel;
+
+            // ensure the pixel is within the valid range of values
+            if (pixel > maxPixelValue)
+            {
+                cerr << "error: a pixel exists in the data which exceeds the given maximum pixel value of " << maxPixelValue << "\n";
+                exit(1);
+            }
             
             rowResult.push_back(pixel);
         }
