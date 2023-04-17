@@ -1,8 +1,8 @@
 /* 
     seamCarving.cpp
 
-    Seam carving changes the size of an image by removing the least visible pixels in the image. 
-    The visibility of a pixel can be defined using an energy function. Seam carving can be done by finding a 
+    seam carving changes the size of an image by removing the least visible pixels in the image. 
+    the visibility of a pixel can be defined using an energy function. Seam carving can be done by finding a 
     one-pixel wide path of lowest energy crossing the image from top to bottom (vertical path) or 
     from left to right (horizontal path) and removing the path (seam).
 
@@ -41,6 +41,7 @@ vector<vector<int>> initEnergyMap(const vector<vector<int>> &imageMap);
 vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap);
 void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumulativeEnergyMap);
 void displayMap(const vector<vector<int>> &map);
+void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical_seams, int num_horizontal_seams);
 
 int main(int argc, char* argv[]) 
 {
@@ -54,32 +55,51 @@ int main(int argc, char* argv[])
     {
         cerr << "error: invalid command-line arguments\n"
              << "format of valid program invocation: ./a [pgm image file] [# vertical seams to remove] [# horizontal seams to remove]\n";
+        exit(1);
     }
-
+     
     // INITIALIZE THE IMAGE MAP 
     vector<vector<int>> I = initImageMap(argv[1]);
 
-    cout << "Image Map For '" << argv[1] << "': \n";
+    // validate command-line args for vertical/horizontal carve requests
+    int num_vertical_seams = atoi(argv[2]);
+    int num_horizontal_seams = atoi(argv[3]);
+    validateCarveRequests(I, num_vertical_seams, num_horizontal_seams);
+
+    cout << "'" << argv[1] << "' --> Initial Image Map:\n";
     displayMap(I);
 
-    // INITIALIZE THE ENERGY MAP
-    vector<vector<int>> E = initEnergyMap(I);
-    
-    cout << "\nEnergy Map: \n";
-    displayMap(E);
+    // carve the requested number of vertical seams
+    for (int i = 1; i <= num_vertical_seams; ++i)
+    {
+        cout << "\n[C][A][R][V][I][N][G] [V[E][R][T][I][C][A][L] [S][E][A][M] [" << i << "]\n";
 
-    // INITIALIZE THE CUMULATIVE ENERGY MAP 
-    vector<vector<int>> CE = initCumulativeEnergyMap(E);
+        cout << "\nInitial Image Map:\n";
+        displayMap(I);
 
-    cout << "\nCumulative Energy Map: \n";
-    displayMap(CE);
+        // INITIALIZE THE ENERGY MAP
+        vector<vector<int>> E = initEnergyMap(I);
+        
+        cout << "\nEnergy Map: \n";
+        displayMap(E);
 
-    // CARVE OUT A SEAM
-    seamCarver(I, CE); 
+        // INITIALIZE THE CUMULATIVE ENERGY MAP 
+        vector<vector<int>> CE = initCumulativeEnergyMap(E);
 
-    cout << "\nSeam-Carved Image: \n";
-    displayMap(I);
-   
+        cout << "\nCumulative Energy Map: \n";
+        displayMap(CE);
+
+        // CARVE OUT A SEAM
+        seamCarver(I, CE); 
+
+        cout << "\nSeam-Carved Image Map: \n";
+        displayMap(I);
+    }
+
+    // @TODO horizontal seam loop
+
+    // @TODO write back the image map in the same file format it was read in as
+
     return 0;
 }
 
@@ -307,7 +327,7 @@ vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap
 // </Summary> 
 // <Param name='imageMap'> the image map to be modified by the seamCarver </Param> 
 // <Param name='cumulativeEnergyMap'> the CE map to be traced back to determine the lowest energy seam </Param> 
-// <Return> N/A -> the seam-carved image map is modified in-place </Return> 
+// <Return> N/A -> the seam-carved image map is modified by reference </Return> 
 void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumulativeEnergyMap)
 {
     // modify imageMap by identifying the pixel in each row that is an element of the 
@@ -387,25 +407,61 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
 // <Return> N/A </Return> 
 void displayMap(const vector<vector<int>> &map)
 {
-    for (vector<int> row : map)
+    for (const vector<int>& row : map)
     {
         for (int pixel : row)
         {
-            if (pixel < 100 && pixel >= 10)
+            if (pixel < 10)
             {
-                cout << " 0" << pixel << " ";
+                cout << "  000" << pixel;
             }
-            else if (pixel < 10)
+            else if (pixel < 100)
             {
-                cout <<  " 00" << pixel << " ";
+                cout << "  00" << pixel;
             }
-            else 
+            else if (pixel < 1000)
             {
-                cout <<  " " << pixel << " ";
+                cout << "  0" << pixel;
+            }
+            else
+            {
+                cout << "  " << pixel;
             }
         }
-
         cout << "\n";
+    }
+
+    return;
+}
+
+void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical_seams, int num_horizontal_seams)
+{
+    // validate vertical seam request
+    if (num_vertical_seams < 0)
+    {
+        cerr << "error: requested number of vertical seams to carve must be greater than or equal to 0\n";
+        exit(1);
+    }
+    if (num_vertical_seams >= imageMap[0].size())
+    {
+        cerr << "error: the requested number of vertical seams to carve is " << num_vertical_seams << ", which is invalid.\n"
+             << "the provided image is " << imageMap[0].size() << " pixels wide. to carve the requested number of vertical seams would be to\n"
+             << "erase the image entirely\n";
+        exit(1);
+    }
+
+    // validate horizontal seam request
+    if (num_horizontal_seams < 0)
+    {
+        cerr << "error: requested number of horizontal seams to carve must be greater than or equal to 0\n";
+        exit(1);
+    }
+    if (num_horizontal_seams >= imageMap.size())
+    {
+        cerr << "error: the requested number of horizontal seams to carve is " << num_horizontal_seams << ", which is invalid.\n"
+             << "the provided image is " << imageMap.size() << " pixels tall. to carve the requested number of horizontal seams would be to\n"
+             << "erase the image entirely\n";
+        exit(1);
     }
 
     return;
