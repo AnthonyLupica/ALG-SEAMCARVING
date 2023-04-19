@@ -47,6 +47,7 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
 
 void transposeMap(vector<vector<int>> &imageMap);
 void displayMap(const vector<vector<int>> &map);
+void displayTranspose(const vector<vector<int>> &map);
 void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical_seams, int num_horizontal_seams);
 
 int main(int argc, char* argv[]) 
@@ -102,7 +103,39 @@ int main(int argc, char* argv[])
         displayMap(I);
     }
 
-    // @TODO horizontal seam loop
+    // CARVE THE REQUESTED NUMBER OF HORIZONATL SEAMS
+    if (num_horizontal_seams > 0)
+    {    
+        // if-block protects against unecessarily tranposing the image map
+
+        transposeMap(I); // transpose the map to reuse the vertical seam carver for horizontal seams
+        for (int i = 1; i <= num_horizontal_seams; ++i)
+        {
+            cout << "\n[C][A][R][V][I][N][G] [H[O][R][I][Z][O][N][T][A][L] [S][E][A][M] [" << i << "]\n";
+
+            cout << "\nInitial Image Map:\n";
+            displayTranspose(I);
+
+            // INITIALIZE THE ENERGY MAP
+            vector<vector<int>> E = initEnergyMap(I);
+            
+            cout << "\nEnergy Map: \n";
+            displayTranspose(E);
+
+            // INITIALIZE THE CUMULATIVE ENERGY MAP 
+            vector<vector<int>> CE = initCumulativeEnergyMap(E);
+
+            cout << "\nCumulative Energy Map: \n";
+            displayTranspose(CE);
+
+            // CARVE OUT A SEAM
+            seamCarver(I, CE); 
+
+            cout << "\nSeam-Carved Image Map: \n";
+            displayTranspose(I);
+        }
+        transposeMap(I); // undo the transpose s
+    }
 
     // WRITE RESULTS TO FILE
     cout << "\nEND PROCESSING\n";
@@ -401,11 +434,11 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
 }
 
 /// @brief Transpose a given 2D vector.
-/// @param imageMap 2D vector to transpose.
+/// @param imageMap 2D vector to transpose. Original is modified.
 void transposeMap(vector<vector<int>> &imageMap)
 {
     // the transpose map will need as many rows as imageMap has columns
-    vector<vector<int>> transpose (imageMap[0].size(), vector<int>());
+    vector<vector<int>> transpose(imageMap[0].size(), vector<int>());
 
     for(int i = 0; i < imageMap.size(); ++i)
     {
@@ -457,6 +490,20 @@ void displayMap(const vector<vector<int>> &map)
         }
         cout << "\n";
     }
+
+    return;
+}
+
+/// @brief Helper. Utilize existing functions to display the transpose of a map 
+///        without modifying the original.
+/// @param map The 2D vector whose transpose is to be displayed.
+void displayTranspose(const vector<vector<int>> &map)
+{
+    vector<vector<int>> temp(map);
+
+    // transposes the temporary copy and displays it
+    transposeMap(temp);
+    displayMap(temp);
 
     return;
 }
