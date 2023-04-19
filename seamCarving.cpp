@@ -152,6 +152,7 @@ int main(int argc, char* argv[])
     writeResults(I, fileToWrite);
 
     cout << "\nEND PROCESSING\n";
+    cout << "Results written to '" << fileToWrite << "' \n";
     
     return 0;
 }
@@ -575,4 +576,6 @@ void writeResults(const vector<vector<int>> &imageMap, const string &filename)
         }
         outFile << "\n";
     }
+
+    return;
 }
