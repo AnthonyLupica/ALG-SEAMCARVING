@@ -558,6 +558,9 @@ void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical
     return;
 }
 
+/// @brief  Write the seam-carved image map to a file. 
+/// @param imageMap The image map that has been modified by the seam carving algorithm.
+/// @param filename Name of the file to write the results to.
 void writeResults(const vector<vector<int>> &imageMap, const string &filename)
 {
     ofstream outFile(filename);
