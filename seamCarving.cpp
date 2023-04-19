@@ -32,6 +32,7 @@ using std::cerr;
 using std::endl;
 using std::getline;
 using std::ifstream;
+using std::ofstream;
 using std::vector;
 using std::string;
 using std::stringstream;
@@ -49,6 +50,7 @@ void transposeMap(vector<vector<int>> &imageMap);
 void displayMap(const vector<vector<int>> &map);
 void displayTranspose(const vector<vector<int>> &map);
 void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical_seams, int num_horizontal_seams);
+void writeResults(const vector<vector<int>> &imageMap, const string &filename);
 
 int main(int argc, char* argv[]) 
 {
@@ -66,7 +68,8 @@ int main(int argc, char* argv[])
     }
 
     // INITIALIZE THE IMAGE MAP 
-    vector<vector<int>> I = initImageMap(argv[1]);
+    string fullname = string(argv[1]);
+    vector<vector<int>> I = initImageMap(fullname);
 
     // validate command-line args for vertical/horizontal carve requests
     int num_vertical_seams = atoi(argv[2]);
@@ -106,7 +109,7 @@ int main(int argc, char* argv[])
     // CARVE THE REQUESTED NUMBER OF HORIZONATL SEAMS
     if (num_horizontal_seams > 0)
     {    
-        // if-block protects against unecessarily tranposing the image map
+        // if-block protects against unecessarily transposing the image map
 
         transposeMap(I); // transpose the map to reuse the vertical seam carver for horizontal seams
         for (int i = 1; i <= num_horizontal_seams; ++i)
@@ -134,13 +137,22 @@ int main(int argc, char* argv[])
             cout << "\nSeam-Carved Image Map: \n";
             displayTranspose(I);
         }
-        transposeMap(I); // undo the transpose s
+        transposeMap(I); // undo the transpose
     }
 
     // WRITE RESULTS TO FILE
-    cout << "\nEND PROCESSING\n";
-    // @TODO write back the image map in the same file format it was read in as
 
+    // get the raw file name
+    string rawname = fullname.substr(0, fullname.find_last_of("."));
+
+    // derive file name to write to (./a example.pgm 10 5  --->  example_processed_10_5.pgm)
+    string fileToWrite = rawname + "_processed_" + std::to_string(num_vertical_seams) + "_" + std::to_string(num_horizontal_seams) + ".pgm";
+
+    // write the processed image to fileToWrite
+    writeResults(I, fileToWrite);
+
+    cout << "\nEND PROCESSING\n";
+    
     return 0;
 }
 
@@ -543,4 +555,24 @@ void validateCarveRequests(const vector<vector<int>> &imageMap, int num_vertical
     }
 
     return;
+}
+
+void writeResults(const vector<vector<int>> &imageMap, const string &filename)
+{
+    ofstream outFile(filename);
+
+    outFile << "P2\n"; // for pgm file type
+    outFile << "# Processed by Seam Carving Inc.\n"; // Seam Carving Incorporated!!!
+    outFile << imageMap[0].size() << " " << imageMap.size() << "\n";  // first the # columns, then # rows, to match pgm file format for irfanview
+    outFile << 255 << "\n"; // can hard code 255 for max pixel value for pgm
+
+    // write processed image map
+    for (int i = 0; i < imageMap.size(); ++i)
+    {
+        for (int j = 0; j < imageMap[0].size(); ++j)
+        {
+            outFile << imageMap[i][j] << " ";
+        }
+        outFile << "\n";
+    }
 }
