@@ -1,6 +1,8 @@
 /* 
     seamCarving.cpp
 
+    run with -> ./a [pgm image file] [# vertical seams to remove] [# horizontal seams to remove]
+
     seam carving changes the size of an image by removing the least visible pixels in the image. 
     the visibility of a pixel can be defined using an energy function. Seam carving can be done by finding a 
     one-pixel wide path of lowest energy crossing the image from top to bottom (vertical path) or 
