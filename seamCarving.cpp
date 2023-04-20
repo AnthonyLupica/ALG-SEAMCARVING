@@ -342,26 +342,26 @@ vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap
             //#REGION bounds checking
             // create a list of up to 3 (or 2) seam origin pixels in the row above that can be connected
             // to the seam pixel in the current row.
-            vector<int> validSeamOriginList;
+            vector<int> nextSeamPixelCandidates;
 
             // validate bounds of upper-left
             if ((j - 1) >= 0) 
             { 
-                validSeamOriginList.push_back(result[i - 1][j - 1]);
+                nextSeamPixelCandidates.push_back(result[i - 1][j - 1]);
             }
 
             // no need to validate upper
-            validSeamOriginList.push_back(result[i - 1][j]);
+            nextSeamPixelCandidates.push_back(result[i - 1][j]);
 
             // validate bounds of upper-right
             if ((j + 1) < energyMap[i].size()) 
             { 
-                validSeamOriginList.push_back(result[i - 1][j + 1]);
+                nextSeamPixelCandidates.push_back(result[i - 1][j + 1]);
             }
             //#ENDREGION
 
-            // at this pixel, add to its energy the minimum energy contained within validSeamOriginList
-            result[i][j] += *std::min_element(validSeamOriginList.begin(), validSeamOriginList.end());
+            // at this pixel, add to its energy the minimum energy contained within nextSeamPixelCandidates
+            result[i][j] += *std::min_element(nextSeamPixelCandidates.begin(), nextSeamPixelCandidates.end());
         }
     }
 
@@ -375,7 +375,7 @@ vector<vector<int>> initCumulativeEnergyMap(const vector<vector<int>> &energyMap
 void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumulativeEnergyMap)
 {
     // modify imageMap by identifying the pixel in each row that is an element of the 
-    // lowest energy seam, shifting it the end of the row, and popping back that element
+    // lowest energy seam, shifting it the end of the row, and popping back that element to carve out the seam
 
     // each element of seam_column_indices corresponds to a row in the image map, 
     // and contains the column index of the seam pixel in that row.
@@ -390,12 +390,13 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
 
     // iterate in reverse-row order, descending the seam
     // for each iteration, first remove the seam pixel for that row 
-    // and next trace-back the seam to find the connecting seam pixel below it for the next iteration
+    // and next trace-back the seam to find the index of the seam pixel connected to it for the next iteration
     for (int i = cumulativeEnergyMap.size() - 1; i >= 0; --i)
     {
         //#REGION remove the seam_pixel for this row
         // Remove the seam pixel from the current row by swapping it with adjacent pixels
         // until it reaches the end of the row, and then "snipping" it off from the end.
+        cout << seam_column_indices[i] << "\n";
         int seam_pixel_index = seam_column_indices[i];
         while (seam_pixel_index + 1 < cumulativeEnergyMap[i].size())
         {
@@ -406,37 +407,64 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
         imageMap[i].pop_back();
         //#ENDREGION
         
-        //#REGION find out what the next seam pixel index is
+        //#REGION find out what the next seam pixel index is for the next iteration
         if ((i - 1) >= 0)
         {
             // if-block only reached if trace-back step doesn't take us out of bounds
 
             //#REGION bounds checking
-            // create a list of 3 (or 2) seam origin pixels in the row above that can be connected
-            // to the seam pixel in the current row.
-            vector<int> validSeamOriginList; 
+            // create a candidate list of seam pixel indices
+            // that can connect to the seam pixel in the current row.
+
+            // declarations
+            vector<int> nextSeamPixelCandidates; 
+            int indexUpperLeft = seam_column_indices[i] - 1;
+            int indexUpper = seam_column_indices[i];
+            int indexUpperRight = seam_column_indices[i] + 1;
 
             // validate bounds of upper-left
-            if ((seam_column_indices[i] - 1) >= 0) 
+            bool upperLeftIsIncluded = false;
+            if ((indexUpperLeft) >= 0) 
             { 
-                validSeamOriginList.push_back(cumulativeEnergyMap[i - 1][seam_column_indices[i] - 1]);
+                // the connecting seam pixel might be the upper-left pixel
+                nextSeamPixelCandidates.push_back(cumulativeEnergyMap[i - 1][indexUpperLeft]);
+                upperLeftIsIncluded = true;
             }
 
-            // no need to validate upper
-            validSeamOriginList.push_back(cumulativeEnergyMap[i - 1][seam_column_indices[i]]);
+            // no need to validate upper as it will never be out of bounds
+            nextSeamPixelCandidates.push_back(cumulativeEnergyMap[i - 1][indexUpper]);
 
             // validate bounds of upper-right
-            if ((seam_column_indices[i] + 1) < cumulativeEnergyMap[i].size()) 
+            bool upperRightIsIncluded = false;
+            if ((indexUpperRight) < cumulativeEnergyMap[i].size()) 
             { 
-                validSeamOriginList.push_back(cumulativeEnergyMap[i - 1][seam_column_indices[i] + 1]);
+                // the connecting seam pixel might be the upper-right pixel
+                nextSeamPixelCandidates.push_back(cumulativeEnergyMap[i - 1][indexUpperRight]);
+                upperRightIsIncluded = true;
+            }
+
+            // among the candidate seam pixels, find the one with the lowest energy
+            int seam_traceback_value = *std::min_element(nextSeamPixelCandidates.begin(), nextSeamPixelCandidates.end()); 
+            
+            // find the index in the trace-back row of this "lowest energy" pixel.
+            // we need to define a range for out search. start by assuming it includes all three candidate indices
+            int offsetStart = indexUpperLeft;
+            int offsetEnd = indexUpperRight;
+            if (!upperLeftIsIncluded)
+            {
+                // if no upper-left, we are on a left boundary. constrain start of range
+                offsetStart = indexUpper;
+            }
+            
+            if (!upperRightIsIncluded)
+            {
+                // if no upper-right, we're on a right boundary. constrain end of range
+                offsetEnd = indexUpper;
             }
             //#ENDREGION
-
-            // among the possible seam trace-back pixels in the list, find the lowest energy
-            int seam_traceback_value = *std::min_element(validSeamOriginList.begin(), validSeamOriginList.end()); 
             
-            // find the index in the trace-back row of this "lowest energy" pixel
-            auto seam_traceback_itr = std::find(cumulativeEnergyMap[i - 1].begin(), cumulativeEnergyMap[i - 1].end(), seam_traceback_value);
+            // with the defined range to search across, look for the index of the next seam pixel
+            auto seam_traceback_itr = std::find(cumulativeEnergyMap[i - 1].begin() + offsetStart, cumulativeEnergyMap[i - 1].begin() + offsetEnd, seam_traceback_value);
             int seam_traceback_index = std::distance(cumulativeEnergyMap[i - 1].begin(), seam_traceback_itr);
 
             // finally, assign this index as the next iterations seam pixel index
@@ -501,7 +529,7 @@ void displayMap(const vector<vector<int>> &map)
                 cout << "  " << pixel;
             }
         }
-        cout << "\n";
+        cout << "\n\n";
     }
 
     return;
