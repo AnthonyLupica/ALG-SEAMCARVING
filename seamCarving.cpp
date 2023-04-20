@@ -611,7 +611,7 @@ void writeResults(const vector<vector<int>> &imageMap, const string &filename)
             }
         }
     }
-    outFile << max_val << "\n"; // can hard code 255 for max pixel value for pgm
+    outFile << max_val << "\n";
 
     // write processed image map
     for (int i = 0; i < imageMap.size(); ++i)
