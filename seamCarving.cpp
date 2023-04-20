@@ -16,6 +16,9 @@
         *                        ; pixel data begins here 
         *
         * 
+
+    Note: Several print statements have been commented out in main. These visualize each step of the process;
+          uncomment them out for debugging help.
 */
 
 #include <iostream> 
@@ -76,34 +79,34 @@ int main(int argc, char* argv[])
     int num_horizontal_seams = atoi(argv[3]);
     validateCarveRequests(I, num_vertical_seams, num_horizontal_seams);
 
-    cout << "'" << argv[1] << "' --> Initial Image Map:\n";
-    displayMap(I);
+    // cout << "'" << argv[1] << "' --> Initial Image Map:\n";
+    // displayMap(I);
 
     // CARVE THE REQUESTED NUMBER OF VERTICAL SEAMS
     for (int i = 1; i <= num_vertical_seams; ++i)
     {
         cout << "\n[C][A][R][V][I][N][G] [V[E][R][T][I][C][A][L] [S][E][A][M] [" << i << "]\n";
 
-        cout << "\nInitial Image Map:\n";
-        displayMap(I);
+        // cout << "\nInitial Image Map:\n";
+        // displayMap(I);
 
         // INITIALIZE THE ENERGY MAP
         vector<vector<int>> E = initEnergyMap(I);
         
-        cout << "\nEnergy Map: \n";
-        displayMap(E);
+        // cout << "\nEnergy Map: \n";
+        // displayMap(E);
 
         // INITIALIZE THE CUMULATIVE ENERGY MAP 
         vector<vector<int>> CE = initCumulativeEnergyMap(E);
 
-        cout << "\nCumulative Energy Map: \n";
-        displayMap(CE);
+        // cout << "\nCumulative Energy Map: \n";
+        // displayMap(CE);
 
         // CARVE OUT A SEAM
         seamCarver(I, CE); 
 
-        cout << "\nSeam-Carved Image Map: \n";
-        displayMap(I);
+        // cout << "\nSeam-Carved Image Map: \n";
+        // displayMap(I);
     }
 
     // CARVE THE REQUESTED NUMBER OF HORIZONATL SEAMS
@@ -116,26 +119,26 @@ int main(int argc, char* argv[])
         {
             cout << "\n[C][A][R][V][I][N][G] [H[O][R][I][Z][O][N][T][A][L] [S][E][A][M] [" << i << "]\n";
 
-            cout << "\nInitial Image Map:\n";
-            displayTranspose(I);
+            // cout << "\nInitial Image Map:\n";
+            // displayTranspose(I);
 
             // INITIALIZE THE ENERGY MAP
             vector<vector<int>> E = initEnergyMap(I);
             
-            cout << "\nEnergy Map: \n";
-            displayTranspose(E);
+            // cout << "\nEnergy Map: \n";
+            // displayTranspose(E);
 
             // INITIALIZE THE CUMULATIVE ENERGY MAP 
             vector<vector<int>> CE = initCumulativeEnergyMap(E);
 
-            cout << "\nCumulative Energy Map: \n";
-            displayTranspose(CE);
+            // cout << "\nCumulative Energy Map: \n";
+            // displayTranspose(CE);
 
             // CARVE OUT A SEAM
             seamCarver(I, CE); 
 
-            cout << "\nSeam-Carved Image Map: \n";
-            displayTranspose(I);
+            // cout << "\nSeam-Carved Image Map: \n";
+            // displayTranspose(I);
         }
         transposeMap(I); // undo the transpose
     }
@@ -183,7 +186,7 @@ vector<vector<int>> initImageMap(const string &filename)
     { 
         // this program handles only P2 images, meaning colors must be in greyscale
         cerr << "error: invalid pgm file format\n"
-             << "file format was read as '" << temp_line << "', while the only supported format is 'P2'\n";
+             << "file format was read as '" << temp_line << "', while the supported format is 'P2' for a PGM file\n";
         exit(1);
     }
 
@@ -396,7 +399,6 @@ void seamCarver(vector<vector<int>> &imageMap, const vector<vector<int>> &cumula
         //#REGION remove the seam_pixel for this row
         // Remove the seam pixel from the current row by swapping it with adjacent pixels
         // until it reaches the end of the row, and then "snipping" it off from the end.
-        cout << seam_column_indices[i] << "\n";
         int seam_pixel_index = seam_column_indices[i];
         while (seam_pixel_index + 1 < cumulativeEnergyMap[i].size())
         {
@@ -596,7 +598,20 @@ void writeResults(const vector<vector<int>> &imageMap, const string &filename)
     outFile << "P2\n"; // for pgm file type
     outFile << "# Processed by Seam Carving Inc.\n"; // Seam Carving Incorporated!!!
     outFile << imageMap[0].size() << " " << imageMap.size() << "\n";  // first the # columns, then # rows, to match pgm file format for irfanview
-    outFile << 255 << "\n"; // can hard code 255 for max pixel value for pgm
+
+    // we need to iterate through the imageMap and find the maximum value
+    int max_val = imageMap[0][0];
+    for (const auto& row : imageMap) 
+    {
+        for (auto val : row) 
+        {
+            if (val > max_val) 
+            {
+                max_val = val;
+            }
+        }
+    }
+    outFile << max_val << "\n"; // can hard code 255 for max pixel value for pgm
 
     // write processed image map
     for (int i = 0; i < imageMap.size(); ++i)
